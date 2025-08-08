@@ -33,7 +33,7 @@ The following events results were displayed:
 Interestingly, there were no failed logon attempts which means that somehow this individual was able to gain valid credentials without having to brute force them.
 
 
-2. I checked individually for new files, modified files, and deleted files. :
+2. I checked individually for new files, modified files, and deleted files using the following queries. _Note: When I ran these queries, results were returned due to the environment of the Cyber Range (things like system checks are logged), however, I am excluding them because they are not relevant to the threat hunt._ :
 </br>New Files
 ```kql
 DeviceFileEvents
@@ -56,11 +56,9 @@ DeviceFileEvents
 | order by Timestamp desc
 ```
 
-The following results were displayed:
-<img width="1405" height="256" alt="image" src="https://github.com/user-attachments/assets/c8ec9aed-8c05-4fc1-b995-6bb21cca29f6" />
-The ".Ink" extension indicates powershell activity so I looked for that next.
+No results were returned indicating that the user did not in anyway tamper with the system files.
 
-5. Although the administor claimed he saw no scripts on the system, I decided to check you powershell events using the following query:
+3. Although the administor claimed he saw no scripts on the system, I decided to check you powershell events using the following query:
 ```kql
 DeviceProcessEvents
 | where DeviceName == "rojas-admin"
