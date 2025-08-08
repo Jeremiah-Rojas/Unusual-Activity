@@ -45,14 +45,14 @@ DeviceFileEvents
 ```kql
 DeviceFileEvents
 | where DeviceName == "rojas-mde"
-| where ActionType == "FileCreated"
+| where ActionType == "FileDeleted"
 | order by Timestamp desc
 ```
 </br>Deleted Files
 ```kql
 DeviceFileEvents
 | where DeviceName == "rojas-mde"
-| where ActionType == "FileCreated"
+| where ActionType == "FileModified"
 | order by Timestamp desc
 ```
 
