@@ -69,15 +69,15 @@ DeviceProcessEvents
 The following events were displayed:
 <img width="1004" height="617" alt="image" src="https://github.com/user-attachments/assets/c3a2c5ae-73b6-499a-9a7a-430ee39bc48e" />
 The commands run by the user are:
-```netsh advfirewall firewall show rule name=all```: This command displays the firewall rules
-```netstat -a```: This command displays all active network connections and listening ports on the system.
-```ipconfig /all```: This command displays a lot of information about the network's configuration including: host IP address, host MAC address, subnet mask, DHCP configuration, DNS server, default gateway, etc.
-```ipconfig /displaydns```: Displays recently resolved domain names and their associated IP addresses (essentially showing previously visited websites).
-```hostname```: Displays the name of the computer.
-```whoami```: Displays the username of the computer.
-```whoami /groups```: Lists all the security groups that the user belongs to, along with associated attributes and privilege levels.
-```net session```: Displays active SMB (Server Message Block) file sharing sessions on the computer.
-```net1 session```: Displays the same information as ```net session``` but is more compatible with legacy systems or programs.
+</br>```netsh advfirewall firewall show rule name=all```: This command displays the firewall rules
+</br>```netstat -a```: This command displays all active network connections and listening ports on the system.
+</br>```ipconfig /all```: This command displays a lot of information about the network's configuration including: host IP address, host MAC address, subnet mask, DHCP configuration, DNS server, default gateway, etc.
+</br>```ipconfig /displaydns```: Displays recently resolved domain names and their associated IP addresses (essentially showing previously visited websites).
+</br>```hostname```: Displays the name of the computer.
+</br>```whoami```: Displays the username of the computer.
+</br>```whoami /groups```: Lists all the security groups that the user belongs to, along with associated attributes and privilege levels.
+</br>```net session```: Displays active SMB (Server Message Block) file sharing sessions on the computer.
+</br>```net1 session```: Displays the same information as ```net session``` but is more compatible with legacy systems or programs.
 
 </br>Overall, the user did not exactly do anything malicious, but the series of commands they ran strongly indicate that they were attempting to gain information about the host machine and network. 
 
