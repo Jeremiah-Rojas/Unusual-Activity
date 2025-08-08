@@ -16,7 +16,7 @@ Through a social engineering attack, a user was able to gain access to a certain
 ---
 ## Steps Taken by Bad Actor
 1. Logon successfully into machine (credentials compromised via social engineering)
-2. Run series of commands to gain informaiton about host machine and network
+2. Run series of commands to gain information about host machine and network
 3. Restart the machine in a futile attempt to erase anything that may have been logged
 ---
 
@@ -58,7 +58,7 @@ DeviceFileEvents
 
 No results were returned indicating that the user did not in anyway tamper with the system files.
 
-3. Although the administor claimed he saw no scripts on the system, I decided to check you powershell events using the following query:
+3. I then searched for any commands run on the system using the following query. _Note: I excluded all "exe" commands to simplify the threat hunting process since all of the "exe" commands were from the nature of the cyber range._ :
 ```kql
 DeviceProcessEvents
 | where DeviceName == "rojas-mde"
@@ -68,26 +68,25 @@ DeviceProcessEvents
 ```
 The following events were displayed:
 <img width="1004" height="617" alt="image" src="https://github.com/user-attachments/assets/c3a2c5ae-73b6-499a-9a7a-430ee39bc48e" />
+The commands run by the user are:
+```netsh advfirewall firewall show rule name=all```: This command displays the firewall rules
+```netstat -a```: This command displays all active network connections and listening ports on the system.
+```ipconfig /all```: This command displays a lot of information about the network's configuration including: host IP address, host MAC address, subnet mask, DHCP configuration, DNS server, default gateway, etc.
+```ipconfig /displaydns```: Displays recently resolved domain names and their associated IP addresses (essentially showing previously visited websites).
+```hostname```: Displays the name of the computer.
+```whoami```: Displays the username of the computer.
+```whoami /groups```: Lists all the security groups that the user belongs to, along with associated attributes and privilege levels.
+```net session```: Displays active SMB (Server Message Block) file sharing sessions on the computer.
+```net1 session```: Displays the same information as ```net session``` but is more compatible with legacy systems or programs.
 
-</br>This event tells me that the user used Powershell ISE to run the this command: 
-</br>```"powershell.exe" -EncodedCommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIABoAGUAbABsAG8AIAB3AG8AcgBsAGQ=```
-</br>Based on the last character of the string "=", this is a base64 encoded message that is displayed to the screen when the command runs. The following command prints to the screen "hello world." However, I still had not found an evidence of a script, so I ran the following query:
-```kql
-DeviceFileEvents
-| where DeviceName == "rojas-admin"
-| where FileName endswith ".ps1"
-```
-I found the script in the results named "IT-testing" and clicked on it:
-</br><img width="1391" height="229" alt="image" src="https://github.com/user-attachments/assets/00978991-034e-4183-991e-2c5ccc0c93be" />
-</br>Collectively from the data, I concluded that the image was downloaded from the powershell script and the command to print "hello world" was printed to the screen. To prevent this infected system from damaging other systems on the network, I isolated the administrator's computer, "rojas-admin". (For some odd reasons, I could not verify that the script was deleted because the logs weren't showing up.)
+</br>Overall, the user did not exactly do anything malicious, but the series of commands they ran strongly indicate that they were attempting to gain information about the host machine and network. 
 
 ---
 
 ## Chronological Events
 
-1. The user brute forced the admin password and logged in
-2. The user used powershell ISE to write and run the script
-3. The script downloaded an image and printed text to the screen
+1. The user successfully logged in with compromised credentials
+2. The user ran a series of commands to gain technical details of a computer and the network
 
 ---
 
@@ -105,11 +104,11 @@ The administrator's device was compromised via brute force, ```rojas-admin```. T
 ## Created By:
 - **Author Name**: Jeremiah Rojas
 - **Author Contact**: https://www.linkedin.com/in/jeremiah-rojas-2425532b3
-- **Date**: July 12, 2025
+- **Date**: August 8, 2025
 
 ---
 
 ## Revision History:
 | **Version** | **Changes**                   | **Date**         | **Modified By**   |
 |-------------|-------------------------------|------------------|-------------------|
-| 1.0         | Initial draft                  | `July  14, 2025`  | `Jeremiah Rojas`   
+| 1.0         | Initial draft                  | `August 8, 2025`  | `Jeremiah Rojas`   
