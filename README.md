@@ -15,27 +15,14 @@ Through a social engineering attack, a user was able to gain access to a certain
 
 ---
 ## Steps Taken by Bad Actor
-1. Attempt to brute force the password in RDP with incorrect credentials
-2. Successfully log in
-3. Execute Malicious Powershell script: 
-```
-powershell.exe -EncodedCommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIABoAGUAbABsAG8AIAB3AG8AcgBsAGQ=
-
-# Define the URL and the destination path
-$url = "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%2Fid%2FOIP.D_2umvMRIihretglyFNrlwHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=c3186ebe04803f74c7321aa6f7a1ddc64ab70f005e924506bd045c0c41df2737&ipo=images"
-$output = "C:\Users\thanos\Downloads\image.jpg"
-
-# Download the image
-Invoke-WebRequest -Uri $url -OutFile $output
-```
-5. Delete powershell script 
-Note: Of course these actions are harmless for the purpose of the lab. The "malicious powershell script" prints "hello world" to the screen and the downloads an image of a tree.
-
+1. Logon successfully into machine (credentials compromised via social engineering)
+2. Run series of commands to gain informaiton about host machine and network
+3. Restart the machine in a futile attempt to erase anything that may have been logged
 ---
 
 ## Steps Taken
 
-1. First look for logon failures using the following query (I narrowed down the results by entering in the DeviceName):
+1. First look for logon events using the following query (I narrowed down the results by entering in the DeviceName):
 ```kql
 DeviceLogonEvents
 | where DeviceName == "rojas-admin"
