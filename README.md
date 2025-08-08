@@ -92,12 +92,12 @@ The commands run by the user are:
 
 ## Summary
 
-The administrator's device was compromised via brute force, ```rojas-admin``` and a script ```IT-testing.ps1``` was run. This script downloaded an image and printed text to the screen but did not implement permanent damage. This attack, although simple, stresses the importance having strong passwords and avoiding the reuse of old passwords since they can be easily compromised.
+An unauthorized individual gained entry into the company facility and it is thought that through a social engineering effort, stole a valid user’s credentials in which he used to login into the machine ```rojas-mde```, and then acquired various details about the network.
 
 ---
 
 ## Response Taken
-The administrator's device was compromised via brute force, ```rojas-admin```. The device was isolated and the administrator was notified. All malicous files were deleted and a anti-malware scan was peformed.
+The compromised machine ```rojas-mde```, was isolated and an antivirus scan was run. The credentials for the machine were changed and a social engineering info session was scheduled in order to prevent further breaches. Security analysts were notified of the breach in order to closely monitor any attempt of unauthorized access to company resources since the malicious actor was able to gain valid information; however, without network access, their efforts to compromise company security remains restricted.
 
 ---
 
