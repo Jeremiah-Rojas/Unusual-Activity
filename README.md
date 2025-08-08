@@ -10,8 +10,8 @@ Through a social engineering attack, a user was able to gain access to a certain
 
 ## IoC Discovery Plan:
 1. Check DeviceLogonEvents for any signs of brute force attempts
-2. Check DeviceFileEvents for any signs file installations and/or file deletions
-3. Check DeviceProcessEvents for any signs powershell usage
+2. Check DeviceFileEvents for any new files or deleted files
+3. Check DeviceProcessEvents to view any commands run
 
 ---
 ## Steps Taken by Bad Actor
