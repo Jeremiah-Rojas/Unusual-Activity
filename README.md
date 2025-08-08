@@ -1,110 +1,123 @@
 # Unusual-Activity
+## Example Scenario
 Through a social engineering attack, a user was able to gain access to a certain part of the facility. During this time he accessed one of the company computers and was seen interacting with the machine. The security administrators have tasked you to figure out what this individual was doing and if the computer's integrity was compromised in anyway.
 
 ## Tools Utilized
 - Powershell
 - Microsoft Defender (KQL)
 
-## Step 1: Setting up the Alert in Microsoft Defender
-Rule 1:
-I created a detection rule in Defender that would detect the existence of a file on the system named `AutoIt3.exe` which in this case is the script executor. The rule also checks if any commands run on the system that contain the values `.au3` or `calc.au3`, then the alert is triggered.
-I created the detection rule using the following query:
-```kql
-DeviceProcessEvents
-| where DeviceName == "rojas-mde"
-| where FileName =~ "AutoIt3.exe"
-| where ProcessCommandLine has_any (".au3", "calc.au3")
-| where FolderPath has_any ("Users", "Temp", "Downloads")
+---
+
+## IoC Discovery Plan:
+1. Check DeviceLogonEvents for any signs of brute force attempts
+2. Check DeviceFileEvents for any signs file installations and/or file deletions
+3. Check DeviceProcessEvents for any signs powershell usage
+
+---
+## Steps Taken by Bad Actor
+1. Attempt to brute force the password in RDP with incorrect credentials
+2. Successfully log in
+3. Execute Malicious Powershell script: 
 ```
-Rule 2:
-This detection rule is triggered when `AutoIt.exe` launches `calc.exe`. The way I know to search with these parameters is because these processes are common given the attack scenario.
-I created the detection rule using the following query:
-```kql
-DeviceProcessEvents
-| where DeviceName == "rojas-mde"
-| where InitiatingProcessFileName =~ "AutoIt3.exe"
-| where FileName =~ "calc.exe"
+powershell.exe -EncodedCommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIABoAGUAbABsAG8AIAB3AG8AcgBsAGQ=
+
+# Define the URL and the destination path
+$url = "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%2Fid%2FOIP.D_2umvMRIihretglyFNrlwHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=c3186ebe04803f74c7321aa6f7a1ddc64ab70f005e924506bd045c0c41df2737&ipo=images"
+$output = "C:\Users\thanos\Downloads\image.jpg"
+
+# Download the image
+Invoke-WebRequest -Uri $url -OutFile $output
 ```
-Rule 3:
-This rule was designed to trigger an alert when Powershell is used to download content from the internet; this is done using the `Invoke-WebRequest`.
-I created the detection rule using the following query:
+5. Delete powershell script 
+Note: Of course these actions are harmless for the purpose of the lab. The "malicious powershell script" prints "hello world" to the screen and the downloads an image of a tree.
+
+---
+
+## Steps Taken
+
+1. First look for logon failures using the following query (I narrowed down the results by entering in the DeviceName):
 ```kql
-DeviceProcessEvents
-| where DeviceName == "rojas-mde"
-| where FileName =~ "powershell.exe"
-| where ProcessCommandLine has_any ("Invoke-WebRequest", "wget", "curl")
-| where ProcessCommandLine has "autoit" "getfile.pl"
+DeviceLogonEvents
+| where DeviceName == "rojas-admin"
+| where ActionType == "LogonFailed"
 ```
-Rule 4:
-The last rule triggers an alert when Powershell is being used to install `AutoIt.exe`. Powershell is not a common method of installing programs like these in normal day-to-day activities therefore this activity is considered suspicious.
-I created the detection rule using the following query:
+The following events results were displayed:
+<img width="1402" height="289" alt="image" src="https://github.com/user-attachments/assets/ce9cee7f-8b95-40a6-9949-a29bf8ec68ec" />
+Due to the number of failed logon attempts (7) in a period of three seconds, I concluded that this was a brute force attempt.
+
+2. Next, I wanted to verify if the malicious user was able to successfully logon so I slightly changed the query to search for logon successes:
+```kql
+DeviceLogonEvents
+| where DeviceName == "rojas-admin"
+| where ActionType == "LogonSuccess"
+```
+The following results were displayed:
+<img width="1388" height="128" alt="image" src="https://github.com/user-attachments/assets/5bcd5d15-d258-49e1-a1ee-5258aad816a1" />
+From this I was able to see that the connection was done remotely and from a computer named "desktop-ni4tdje" which is my host computer. This concludes that the user was able to gain access to the admin account. _Note: Although there are more logon successes, these are from me logging in minutes before starting the lab._
+
+4. Now that the user successfully logged in, I wanted to see what they did. From what the administrator told me, the user downloaded a file named "image.jpg" so I looked for this file and how it got there using the following query:
 ```kql
 DeviceFileEvents
-| where DeviceName == "rojas-mde"
-| where FileName has "autoit" and FileName endswith ".exe"
-| where InitiatingProcessFileName =~ "powershell.exe"
+| where DeviceName == "rojas-admin"
+| where ActionType == "FileCreated"
+| where FileName contains "image"
 ```
-## Step 2: Running the Attack (Steps taken by the Attacker/Victim)
-This series of commands would have been taken by the victim or attacker depending on the circumstances in the real-world.
+The following results were displayed:
+<img width="1405" height="256" alt="image" src="https://github.com/user-attachments/assets/c8ec9aed-8c05-4fc1-b995-6bb21cca29f6" />
+The ".Ink" extension indicates powershell activity so I looked for that next.
 
-This downloads the full library of Atomic Red simulated attacks into the VM, including the script that will be run. 
-```powershell
-git clone https://github.com/redcanaryco/atomic-red-team.git
+5. Although the administor claimed he saw no scripts on the system, I decided to check you powershell events using the following query:
+```kql
+DeviceProcessEvents
+| where DeviceName == "rojas-admin"
+| where ActionType == "ProcessCreated"
+| where InitiatingProcessCommandLine contains "powershell"
 ```
-This command moves the user to the folder where the scripts are loaded.
-```powershell
-cd C:\Users\ceh2025\atomic-red-team
+The following events were displayed:
+<img width="1408" height="289" alt="image" src="https://github.com/user-attachments/assets/9b293d53-4534-43f7-8b27-aad2cc3c4ec7" />
+Since I was looking specifically for powershell events, I click on the powershell event:
+</br><img width="314" height="500" alt="image" src="https://github.com/user-attachments/assets/61b41644-a787-45ef-856c-6eb1c308f41c" />
+</br>This event tells me that the user used Powershell ISE to run the this command: 
+</br>```"powershell.exe" -EncodedCommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIABoAGUAbABsAG8AIAB3AG8AcgBsAGQ=```
+</br>Based on the last character of the string "=", this is a base64 encoded message that is displayed to the screen when the command runs. The following command prints to the screen "hello world." However, I still had not found an evidence of a script, so I ran the following query:
+```kql
+DeviceFileEvents
+| where DeviceName == "rojas-admin"
+| where FileName endswith ".ps1"
 ```
-This command makes sure that the atomic script is being pulled from the correct folder (Atomics) that was created when the user cloned the Atomic Red database of attacks.
-```powershell
-$env:PathToAtomicsFolder = "C:\Users\YourUser\atomic-red-team\atomics\"
-```
-This prepares the VM for running the attacks by downloading the right module to do so. “-AllowClobber” also allows the user to override any existing modules that could get in the way.
-```powershell
-Install-Module -Name Invoke-AtomicRedTeam -Force -AllowClobber
-```
-This pulls up the needed module to run the script for the current Powershell session. The user will see it install in powershell.
-```powershell
-Import-Module Invoke-AtomicRedTeam
-```
-This prepares the VM for the attacks by creating the right permissions so that no security controls interfere.
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-```
-This command downloads and installs all the prerequisites needed to run the script.
-```powershell
-Invoke-AtomicTest T1059 -GetPrereqs -PathToAtomicsFolder "C:\Users\YourUser\atomic-red-team\atomics\"
-```
-Runs and detonates the malicious script in the VM. The calculator should launch after running this; in a real-world scenario, the end result would be much more concerning.
-```powershell
-Invoke-AtomicTest T1059 -PathToAtomicsFolder "C:\Users\YourUser\atomic-red-team\atomics\"
-```
-![image](https://github.com/user-attachments/assets/6db2f87a-4951-4020-bde6-366ef5f1e45f)
+I found the script in the results named "IT-testing" and clicked on it:
+</br><img width="1391" height="229" alt="image" src="https://github.com/user-attachments/assets/00978991-034e-4183-991e-2c5ccc0c93be" />
+</br>Collectively from the data, I concluded that the image was downloaded from the powershell script and the command to print "hello world" was printed to the screen. To prevent this infected system from damaging other systems on the network, I isolated the administrator's computer, "rojas-admin". (For some odd reasons, I could not verify that the script was deleted because the logs weren't showing up.)
 
-## Step 3: Analyze the Indicators of Compromise
-Using Microsoft Defender, I was able to view the steps the malicious attacker took to facilitate the attack. Within this page, is it also useful to make note of the timestamps.
-![image](https://github.com/user-attachments/assets/05ecd3d7-301a-467b-a9dc-5a1e7745c945)
+---
 
-According to the NIST 800-61 guidelines, there are certain tasks necessary to perform in order to determine if the alert is a true or false positive:
-1. **_Find the attack vector used to initiate the attack._** The attack vector is the means by which the attack was intiated; things like a malicious link or a USB drive etc. But because this a simulated lab, there is no attack vector per se.
-2. **_Finding precursors or indicators of a security incident._** Because this is a lab and the attack was done my myself, there are no IoCs leading up to the attack. 
-3. **_Analyze the potential security Incident and determine if it is a true or false positive._** After reviewing the alerts in Defender, I verified the the script was indeed downloaded and run.
-4. **_Document all findings and activities of investigation if it is a true positive._** The feature to downlaod a investigation package is currently avaliable in Microsoft Defender.
-5. **_Report the confirmed security incident to management team._** Of course, because this is a simluated lab, there is no management team, but in the real-world, this step would be performed by emailing or presenting findings during a briefing.
+## Chronological Events
 
-## Step 4: NIST 800-61 Incident Response
-**Preparation**
+1. The user brute forced the admin password and logged in
+2. The user used powershell ISE to write and run the script
+3. The script downloaded an image and printed text to the screen
 
-- The proper preparation to prevent an attack like this would be to ensure the the system was fully updated, its firewall properly configured, implementing a back-up of data/system configurations, and other such activities; in this case, I turned off the firewalls so that nothing would prevent the attack from executing.
+---
 
-**Detection and Analysis**
+## Summary
 
-- The IoCs in this case would be the downloading of the AutoIt.exe file and the fact that the user disabled multiple security configurations in order for the program to run smoothly.
+The administrator's device was compromised via brute force, ```rojas-admin``` and a script ```IT-testing.ps1``` was run. This script downloaded an image and printed text to the screen but did not implement permanent damage. This attack, although simple, stresses the importance having strong passwords and avoiding the reuse of old passwords since they can be easily compromised.
 
-**Containment, Eradication, and Recovery**
+---
 
-- The proper steps to be taken would be to isolate the device, remove all malicious files/programs, and restore the system back to a secure state using a back-up. Before removing all the malicious files, its important to retain all relevant data for future purpose and legal reasons. Microsoft Defender has a built-in feature that automatically collects the evidence of the attack.
+## Response Taken
+The administrator's device was compromised via brute force, ```rojas-admin```. The device was isolated and the administrator was notified. All malicous files were deleted and a anti-malware scan was peformed.
 
-**Post-Incident Activity**
+---
 
-- This would include the lessons learned and the retention of the data collected. The lessons learned would be to prevent any user from altering the security confirguations of their system and to implement a secure baseline for all endpoints. The data collected from the attack should be saved according to the organization's policies.
+## Created By:
+- **Author Name**: Jeremiah Rojas
+- **Author Contact**: https://www.linkedin.com/in/jeremiah-rojas-2425532b3
+- **Date**: July 12, 2025
+
+---
+
+## Revision History:
+| **Version** | **Changes**                   | **Date**         | **Modified By**   |
+|-------------|-------------------------------|------------------|-------------------|
+| 1.0         | Initial draft                  | `July  14, 2025`  | `Jeremiah Rojas`   
