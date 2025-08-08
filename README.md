@@ -92,7 +92,7 @@ The commands run by the user are:
 
 ## Summary
 
-An unauthorized individual gained entry into the company facility and it is thought that through a social engineering effort, stole a valid user’s credentials in which he used to login into the machine ```rojas-mde```, and then acquired various details about the network.
+An unauthorized individual gained entry into the company facility and it is thought that through a social engineering effort, stole a valid user’s credentials in which he used to login into the machine ```rojas-mde```, and then acquired various details about the network. The individual then left and has not returned since.
 
 ---
 
